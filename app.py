@@ -1,6 +1,13 @@
-from flask import Flask, render_template
+import os
+
+from dotenv import load_dotenv
+from flask import Flask, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash
+
+load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.environ["FLASK_SECRET_KEY"]
 
 
 # ------------------------------------------------------------------ #
@@ -12,13 +19,14 @@ def landing():
     return render_template("landing.html")
 
 
-@app.route("/register")
-def register():
-    return render_template("register.html")
-
-
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if check_password_hash(os.environ["APP_PASSWORD_HASH"], password):
+            session["logged_in"] = True
+            return redirect(url_for("profile"))
+        return render_template("login.html", error="Incorrect password")
     return render_template("login.html")
 
 
