@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Spendly{% endblock %}
+
+{% block content %}
+
+<section class="dashboard-section">
+    <div class="dashboard-inner">
+
+        <h1 class="dashboard-title">Your spending, at a glance</h1>
+
+        <form id="filter-form" class="dashboard-filter">
+            <div class="form-group">
+                <label for="filter-month">Month</label>
+                <select id="filter-month" class="form-input">
+                    <option value="">All months</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filter-year">Year</label>
+                <input type="number" id="filter-year" class="form-input" placeholder="e.g. 2026" min="2000" max="2100">
+            </div>
+            <button type="submit" class="btn-primary">Apply</button>
+            <button type="button" id="filter-clear" class="btn-ghost">Clear</button>
+        </form>
+
+        <div class="features-inner">
+            <div class="feature-card">
+                <span class="mock-label">Total Spend</span>
+                <div class="mock-total" id="stat-total">—</div>
+            </div>
+            <div class="feature-card">
+                <span class="mock-label">Average Monthly Spend</span>
+                <div class="mock-total" id="stat-average">—</div>
+            </div>
+            <div class="feature-card">
+                <span class="mock-label">Expenses Logged</span>
+                <div class="mock-total" id="stat-count">—</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="mock-card">
+                <div class="mock-card-header"><span class="mock-label">Monthly Trend</span></div>
+                <canvas id="monthly-trend-chart"></canvas>
+            </div>
+            <div class="mock-card">
+                <div class="mock-card-header"><span class="mock-label">By Category</span></div>
+                <canvas id="category-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="expenses-table-wrap">
+            <table class="expenses-table">
+                <thead>
+                    <tr>
+                        <th>Expense</th>
+                        <th>Category</th>
+                        <th>Period</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="top-expenses-body"></tbody>
+            </table>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
