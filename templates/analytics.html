@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Spendly{% endblock %}
+
+{% block head %}
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* Analytics page is built with static Tailwind utility classes (including inside
+       JS-generated markup), so dark mode is applied by re-theming those classes
+       directly under the site's [data-theme="dark"] attribute, instead of retrofitting
+       dark: variants onto every class string. */
+    [data-theme="dark"] #analytics-page { background-color: #0f172a; color: #f1f5f9; }
+    [data-theme="dark"] #analytics-page .bg-white { background-color: #1e293b; }
+    [data-theme="dark"] #analytics-page .text-slate-900 { color: #f1f5f9; }
+    [data-theme="dark"] #analytics-page .text-slate-500 { color: #94a3b8; }
+    [data-theme="dark"] #analytics-page .bg-slate-50 { background-color: rgba(15, 23, 42, 0.5); }
+    [data-theme="dark"] #analytics-page .bg-slate-100 { background-color: #334155; }
+    [data-theme="dark"] #analytics-page .border,
+    [data-theme="dark"] #analytics-page .border-t,
+    [data-theme="dark"] #analytics-page .border-b { border-color: #334155; }
+    [data-theme="dark"] #analytics-page .hover\:bg-slate-50:hover { background-color: rgba(51, 65, 85, 0.4); }
+    [data-theme="dark"] #analytics-page .hover\:text-slate-900:hover { color: #f1f5f9; }
+    [data-theme="dark"] #analytics-page select { color-scheme: dark; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div id="analytics-page" class="bg-white text-slate-900 font-sans antialiased">
+<main class="mx-auto max-w-screen-xl px-4 py-6 md:px-6 space-y-5">
+
+    <!-- Hero panel -->
+    <div class="rounded-2xl overflow-hidden border shadow-sm bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white">
+        <div class="p-6 pb-0">
+            <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-slate-400 text-sm" id="hero-period">—</span>
+                        <span id="hero-budget-badge" class="inline-flex items-center rounded-md px-2 py-0.5 text-xs border"></span>
+                    </div>
+                    <div class="flex items-end gap-3">
+                        <span class="text-4xl text-white tracking-tight" id="hero-spent">—</span>
+                        <span class="text-slate-400 text-sm mb-1">spent this month</span>
+                    </div>
+                    <div class="mt-3 space-y-1">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400" id="hero-budget-total">Budget: —</span>
+                            <span id="hero-budget-remaining"></span>
+                        </div>
+                        <div class="h-1.5 rounded-full bg-white/10 overflow-hidden w-64">
+                            <div id="hero-budget-bar" class="h-full rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <div class="rounded-xl bg-white/8 border border-white/10 px-4 py-3 backdrop-blur-sm min-w-[130px]">
+                        <div class="flex items-center gap-1.5 text-slate-400 text-xs mb-1">
+                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+                            YTD Spent
+                        </div>
+                        <div class="text-xl text-white" id="hero-ytd">—</div>
+                        <div class="flex items-center gap-1 mt-1 text-xs" id="hero-ytd-change"></div>
+                    </div>
+                    <div class="rounded-xl bg-white/8 border border-white/10 px-4 py-3 backdrop-blur-sm min-w-[130px]">
+                        <div class="flex items-center gap-1.5 text-slate-400 text-xs mb-1">
+                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                            Monthly Avg
+                        </div>
+                        <div class="text-xl text-white" id="hero-avg">—</div>
+                        <div class="text-slate-400 text-xs mt-1" id="hero-range">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="h-48 px-2">
+            <canvas id="hero-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" id="summary-cards">
+        <div class="bg-white gap-0 shadow-sm hover:shadow-md transition-shadow rounded-xl border" data-card="total">
+            <div class="pb-2 p-6">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm text-slate-500 leading-none">Total Spent</h4>
+                    <div class="flex size-8 items-center justify-center rounded-lg bg-violet-50">
+                        <svg class="size-4 text-violet-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 pb-5">
+                <div class="flex items-end justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-xl text-slate-900 truncate" data-value>—</div>
+                        <div class="text-xs text-slate-500 mt-0.5" data-sub>—</div>
+                        <div class="flex items-center gap-1 mt-1.5 text-xs" data-change></div>
+                    </div>
+                    <svg class="shrink-0" data-spark width="72" height="28" aria-hidden="true"></svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white gap-0 shadow-sm hover:shadow-md transition-shadow rounded-xl border" data-card="average">
+            <div class="pb-2 p-6">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm text-slate-500 leading-none">Avg Monthly Spend</h4>
+                    <div class="flex size-8 items-center justify-center rounded-lg bg-blue-50">
+                        <svg class="size-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 pb-5">
+                <div class="flex items-end justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-xl text-slate-900 truncate" data-value>—</div>
+                        <div class="text-xs text-slate-500 mt-0.5" data-sub>—</div>
+                        <div class="flex items-center gap-1 mt-1.5 text-xs" data-change></div>
+                    </div>
+                    <svg class="shrink-0" data-spark width="72" height="28" aria-hidden="true"></svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white gap-0 shadow-sm hover:shadow-md transition-shadow rounded-xl border" data-card="top-category">
+            <div class="pb-2 p-6">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm text-slate-500 leading-none">Top Category</h4>
+                    <div class="flex size-8 items-center justify-center rounded-lg bg-orange-50">
+                        <svg class="size-4 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 pb-5">
+                <div class="flex items-end justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-xl text-slate-900 truncate" data-value>—</div>
+                        <div class="text-xs text-slate-500 mt-0.5" data-sub>—</div>
+                        <div class="text-xs text-slate-500 mt-1.5" data-change></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white gap-0 shadow-sm hover:shadow-md transition-shadow rounded-xl border" data-card="budget">
+            <div class="pb-2 p-6">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm text-slate-500 leading-none">Budget Remaining</h4>
+                    <div class="flex size-8 items-center justify-center rounded-lg bg-emerald-50">
+                        <svg class="size-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 pb-5">
+                <div class="flex items-end justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-xl text-slate-900 truncate" data-value>—</div>
+                        <div class="text-xs text-slate-500 mt-0.5" data-sub>—</div>
+                        <div class="text-xs text-slate-500 mt-1.5" data-change></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="text-xs text-slate-400 -mt-2">Budget figures use a placeholder €2,000/month — Spendly doesn't have real budgets configured yet.</p>
+
+    <!-- Trend chart + category breakdown -->
+    <div class="grid gap-5 lg:grid-cols-[1fr_380px]">
+        <div class="bg-white shadow-sm gap-0 flex flex-col rounded-xl border">
+            <div class="border-b pb-4 p-6">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h4 class="leading-none">Monthly Spend Trend</h4>
+                        <p class="text-slate-500 mt-0.5 text-sm" id="trend-description">—</p>
+                    </div>
+                    <div class="flex gap-0.5 rounded-lg bg-slate-100 p-0.5" id="trend-toggle">
+                        <button type="button" data-mode="comparison" class="rounded-md px-3 py-1 text-xs transition-colors">YoY Compare</button>
+                        <button type="button" data-mode="single" class="rounded-md px-3 py-1 text-xs transition-colors">This year only</button>
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-3 flex-wrap">
+                    <div class="flex items-center gap-1.5">
+                        <span class="size-2.5 rounded-sm bg-violet-500"></span>
+                        <span class="text-xs text-slate-500" id="trend-legend-current">—</span>
+                    </div>
+                    <div class="flex items-center gap-1.5" id="trend-legend-prior-wrap">
+                        <span class="size-2.5 rounded-sm bg-indigo-200"></span>
+                        <span class="text-xs text-slate-500" id="trend-legend-prior">—</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <svg width="16" height="2"><line x1="0" y1="1" x2="16" y2="1" stroke="#10B981" stroke-width="1.5" stroke-dasharray="3 2"/></svg>
+                        <span class="text-xs text-slate-500" id="trend-legend-budget">—</span>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-4 px-6 flex-1">
+                <div class="h-56"><canvas id="trend-chart"></canvas></div>
+                <div class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t" id="trend-footer-stats"></div>
+            </div>
+            <div class="h-6"></div>
+        </div>
+
+        <div class="bg-white shadow-sm gap-0 flex flex-col rounded-xl border">
+            <div class="border-b pb-4 p-6">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                        <h4 class="leading-none">Spend by Category</h4>
+                        <p class="text-slate-500 mt-0.5 text-sm" id="category-description">—</p>
+                    </div>
+                    <div class="flex gap-0.5 rounded-lg bg-slate-100 p-0.5" id="category-toggle">
+                        <button type="button" data-mode="donut" class="rounded-md px-3 py-1 text-xs transition-colors">Donut</button>
+                        <button type="button" data-mode="bar" class="rounded-md px-3 py-1 text-xs transition-colors">Avg/Mo</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-4 px-6 pb-6 flex-1">
+                <div id="category-donut-view" class="flex flex-col gap-4">
+                    <div class="h-44 relative">
+                        <canvas id="category-donut-chart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-xs text-slate-500">Total</span>
+                            <span class="text-lg text-slate-900" id="category-donut-total">—</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2" id="category-legend"></div>
+                </div>
+                <div id="category-bar-view" class="hidden">
+                    <p class="text-xs text-slate-500 mb-3" id="category-bar-description">Average monthly spend per category</p>
+                    <div class="h-56"><canvas id="category-bar-chart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category stats table -->
+    <div class="bg-white shadow-sm gap-0 rounded-xl border">
+        <div class="border-b p-6">
+            <h4 class="leading-none">Category Analytics</h4>
+            <p class="text-slate-500 mt-0.5 text-sm">Total spend, monthly average, and transaction count per category</p>
+        </div>
+        <div class="p-0">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b bg-slate-50" id="category-table-head"></tr>
+                    </thead>
+                    <tbody id="category-table-body"></tbody>
+                    <tfoot id="category-table-foot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions table -->
+    <div class="bg-white shadow-sm gap-0 rounded-xl border">
+        <div class="border-b p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h4 class="leading-none">Recent Transactions</h4>
+                    <p class="text-slate-500 mt-0.5 text-sm"><span id="transactions-count">—</span> transactions</p>
+                </div>
+                <div class="flex items-center gap-1.5 h-8 rounded-md border px-2 text-xs">
+                    <svg class="size-3 shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/></svg>
+                    <select id="category-filter" class="outline-none bg-transparent w-40">
+                        <option value="all">All categories</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="p-0">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b bg-slate-50" id="transactions-table-head"></tr>
+                    </thead>
+                    <tbody id="transactions-table-body"></tbody>
+                </table>
+            </div>
+            <div class="border-t px-4 py-3 flex justify-center hidden" id="transactions-show-more-wrap">
+                <button type="button" id="transactions-show-more" class="text-xs text-violet-600 hover:text-violet-700 transition-colors"></button>
+            </div>
+        </div>
+    </div>
+
+</main>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

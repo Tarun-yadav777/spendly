@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            var theme = localStorage.getItem('theme');
+            if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
     <title>{% block title %}Spendly{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,15 +20,20 @@
 
     <nav class="navbar">
         <div class="nav-inner">
-            <a href="{{ url_for('landing') }}" class="nav-brand">
-                <span class="brand-icon">◈</span>
+            <button type="button" id="theme-toggle" class="nav-brand" aria-label="Toggle dark mode">
+                <span class="brand-icon-box">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M8 2C8 2 3 5 3 9C3 11.76 5.24 14 8 14C10.76 14 13 11.76 13 9C13 5 8 2 8 2Z" fill="white" fill-opacity="0.9"/>
+                        <circle cx="8" cy="9" r="2.5" fill="white" fill-opacity="0.3"/>
+                        <circle cx="8" cy="9" r="1.2" fill="white"/>
+                    </svg>
+                </span>
                 <span class="brand-name">Spendly</span>
-            </a>
+            </button>
             <div class="nav-links">
-                {% if session.get('logged_in') %}
-                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                {% if not session.get('logged_in') %}
+                <a href="{{ url_for('login') }}" class="nav-cta">Sign in</a>
                 {% endif %}
-                <a href="{{ url_for('login') }}">Sign in</a>
             </div>
         </div>
     </nav>
@@ -30,14 +41,6 @@
     <main class="main-content">
         {% block content %}{% endblock %}
     </main>
-
-    <footer class="footer">
-        <div class="footer-inner">
-            <span class="brand-icon">◈</span>
-            <span class="footer-name">Spendly</span>
-            <p class="footer-copy">Track every rupee. Own your finances.</p>
-        </div>
-    </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}

@@ -52,7 +52,7 @@ def get_category_totals(month=None, year=None):
     conn = get_db()
     try:
         rows = conn.execute(f"""
-            SELECT category, ROUND(SUM(amount), 2) AS total
+            SELECT category, ROUND(SUM(amount), 2) AS total, COUNT(*) AS count
             FROM expenses {where_sql} GROUP BY category ORDER BY total DESC
         """, params).fetchall()
     finally:
@@ -60,16 +60,16 @@ def get_category_totals(month=None, year=None):
     return [dict(r) for r in rows]
 
 
-TOP_EXPENSES_LIMIT = 10
+RECENT_EXPENSES_LIMIT = 500
 
 
-def get_top_expenses(month=None, year=None, limit=TOP_EXPENSES_LIMIT):
+def get_recent_expenses(month=None, year=None, limit=RECENT_EXPENSES_LIMIT):
     where_sql, params = _build_filter(month, year)
     conn = get_db()
     try:
         rows = conn.execute(f"""
             SELECT id, expense_name, amount, category, month, year, note
-            FROM expenses {where_sql} ORDER BY amount DESC LIMIT ?
+            FROM expenses {where_sql} ORDER BY year DESC, month DESC, id DESC LIMIT ?
         """, params + [limit]).fetchall()
     finally:
         conn.close()
