@@ -18,6 +18,7 @@
 </head>
 <body>
 
+    {% if request.endpoint != 'login' %}
     <nav class="navbar">
         <div class="nav-inner">
             <button type="button" id="theme-toggle" class="nav-brand" aria-label="Toggle dark mode">
@@ -37,6 +38,7 @@
             </div>
         </div>
     </nav>
+    {% endif %}
 
     <main class="main-content">
         {% block content %}{% endblock %}

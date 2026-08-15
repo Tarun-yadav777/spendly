@@ -28,7 +28,7 @@ def login_required(view):
 
 @app.route("/")
 def landing():
-    return render_template("landing.html")
+    return redirect(url_for("login"))
 
 
 @app.route("/login", methods=["GET", "POST"])
