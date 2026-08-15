@@ -155,6 +155,14 @@ a { color: inherit; text-decoration: none; }
 
 .nav-cta:hover { background: linear-gradient(to right, #7c3aed, #4f46e5) !important; opacity: 0.9; }
 
+.nav-cta-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem !important;
+}
+
 /* ------------------------------------------------------------------ */
 /* Main                                                                */
 /* ------------------------------------------------------------------ */
