@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Expense — Spendly{% endblock %}
+
+{% block head %}
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    [data-theme="dark"] #edit-expense-page { background-color: #0f172a; color: #f1f5f9; }
+    [data-theme="dark"] #edit-expense-page .bg-white { background-color: #1e293b; }
+    [data-theme="dark"] #edit-expense-page .text-slate-900 { color: #f1f5f9; }
+    [data-theme="dark"] #edit-expense-page .text-slate-500 { color: #94a3b8; }
+    [data-theme="dark"] #edit-expense-page .text-slate-400 { color: #64748b; }
+    [data-theme="dark"] #edit-expense-page .border { border-color: #334155; }
+    [data-theme="dark"] #edit-expense-page .border-slate-200 { border-color: #334155; }
+    [data-theme="dark"] #edit-expense-page .border-red-200 { border-color: #7f1d1d; }
+    [data-theme="dark"] #edit-expense-page .bg-red-50 { background-color: rgba(127, 29, 29, 0.3); }
+    [data-theme="dark"] #edit-expense-page .text-red-700 { color: #fca5a5; }
+    [data-theme="dark"] #edit-expense-page input,
+    [data-theme="dark"] #edit-expense-page select,
+    [data-theme="dark"] #edit-expense-page textarea {
+        background-color: #0f172a; color: #f1f5f9; border-color: #334155; color-scheme: dark;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div id="edit-expense-page" class="bg-white text-slate-900 font-sans antialiased">
+<main class="mx-auto max-w-screen-sm px-4 py-10 md:px-6">
+
+    <div class="mb-6">
+        <h1 class="text-2xl text-slate-900">Edit Expense</h1>
+        <p class="text-sm text-slate-500 mt-1">Update this expense's details.</p>
+    </div>
+
+    {% if error %}
+    <div class="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('edit_expense', id=expense.id) }}"
+          class="rounded-xl border shadow-sm bg-white p-6 space-y-5">
+
+        <div>
+            <label for="expense_name" class="block text-sm text-slate-500 mb-1.5">Expense name</label>
+            <input type="text" id="expense_name" name="expense_name" required
+                   value="{{ form.expense_name if form else expense.expense_name }}"
+                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="amount" class="block text-sm text-slate-500 mb-1.5">Amount</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0.01" required
+                       value="{{ form.amount if form else expense.amount }}"
+                       class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+            </div>
+            <div>
+                <label for="category" class="block text-sm text-slate-500 mb-1.5">Category</label>
+                <select id="category" name="category" required
+                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                    {% for c in categories %}
+                    <option value="{{ c }}" {{ 'selected' if (form.category if form else expense.category) == c }}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="month" class="block text-sm text-slate-500 mb-1.5">Month</label>
+                <select id="month" name="month" required
+                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                    {% for num, name in months %}
+                    <option value="{{ num }}" {{ 'selected' if (form.month | int(0) if form else expense.month) == num }}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="year" class="block text-sm text-slate-500 mb-1.5">Year</label>
+                <select id="year" name="year" required
+                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                    {% for y in years %}
+                    <option value="{{ y }}" {{ 'selected' if (form.year | int(0) if form else expense.year) == y }}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label for="note" class="block text-sm text-slate-500 mb-1.5">Note <span class="text-slate-400">(optional)</span></label>
+            <textarea id="note" name="note" rows="2"
+                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">{{ form.note if form else (expense.note or '') }}</textarea>
+        </div>
+
+        <button type="submit"
+                class="w-full rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm py-2.5 transition-colors">
+            Save changes
+        </button>
+    </form>
+
+</main>
+</div>
+
+{% endblock %}

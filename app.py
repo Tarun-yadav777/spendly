@@ -1,10 +1,11 @@
+import calendar
 import os
 import secrets
 from datetime import date
 from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, abort, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
 from database import analytics, expenses
@@ -84,21 +85,13 @@ def add_expense():
         note = request.form.get("note", "").strip()
         date_raw = request.form.get("date", "").strip()
 
-        error = None
-        amount = None
         parsed_date = None
 
-        if not expense_name or not amount_raw or not category or not date_raw:
+        if not date_raw:
+            amount = None
             error = "All fields except note are required."
-        elif category not in expenses.CATEGORIES:
-            error = "Please choose a valid category."
         else:
-            try:
-                amount = float(amount_raw)
-                if amount <= 0:
-                    error = "Amount must be a positive number."
-            except ValueError:
-                error = "Amount must be a valid number."
+            amount, error = expenses.validate_fields(expense_name, amount_raw, category)
 
         if error is None:
             try:
@@ -119,6 +112,72 @@ def add_expense():
     return render_template("add_expense.html", categories=expenses.CATEGORIES)
 
 
+@app.route("/transactions")
+@login_required
+def transactions_page():
+    return render_template("transactions.html")
+
+
+@app.route("/api/transactions")
+def api_transactions():
+    if not session.get("logged_in"):
+        return jsonify(error="Unauthorized"), 401
+    return jsonify(transactions=analytics.get_recent_expenses(limit=10000))
+
+
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_expense(id):
+    expense = expenses.get_expense(id)
+    if expense is None:
+        abort(404)
+
+    current_year = date.today().year
+    years = sorted(set(range(min(expense["year"], current_year - 5),
+                              max(expense["year"], current_year) + 1)))
+    months = [(i, calendar.month_name[i]) for i in range(1, 13)]
+
+    if request.method == "POST":
+        expense_name = request.form.get("expense_name", "").strip()
+        amount_raw = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        note = request.form.get("note", "").strip()
+        month_raw = request.form.get("month", "").strip()
+        year_raw = request.form.get("year", "").strip()
+
+        amount, error = expenses.validate_fields(expense_name, amount_raw, category)
+
+        month = year = None
+        if error is None:
+            try:
+                month, year = int(month_raw), int(year_raw)
+                if not 1 <= month <= 12:
+                    raise ValueError
+            except ValueError:
+                error = "Please choose a valid month and year."
+
+        if error:
+            return render_template("edit_expense.html", error=error, expense=expense,
+                                    categories=expenses.CATEGORIES, months=months,
+                                    years=years, form=request.form)
+
+        expenses.update_expense(id, expense_name=expense_name, amount=amount,
+                                 category=category, note=note, month=month, year=year)
+        return redirect(url_for("transactions_page"))
+
+    return render_template("edit_expense.html", expense=expense,
+                            categories=expenses.CATEGORIES, months=months, years=years)
+
+
+@app.route("/expenses/<int:id>/delete", methods=["POST"])
+@login_required
+def delete_expense(id):
+    if expenses.get_expense(id) is None:
+        abort(404)
+    expenses.delete_expense(id)
+    return redirect(url_for("transactions_page"))
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
@@ -127,16 +186,6 @@ def add_expense():
 @app.route("/profile")
 def profile():
     return "Profile page — coming in Step 4"
-
-
-@app.route("/expenses/<int:id>/edit")
-def edit_expense(id):
-    return "Edit expense — coming in Step 8"
-
-
-@app.route("/expenses/<int:id>/delete")
-def delete_expense(id):
-    return "Delete expense — coming in Step 9"
 
 
 if __name__ == "__main__":
