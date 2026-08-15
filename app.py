@@ -28,7 +28,7 @@ def login_required(view):
 
 @app.route("/")
 def landing():
-    return render_template("landing.html")
+    return redirect(url_for("login"))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -37,19 +37,19 @@ def login():
         password = request.form.get("password", "")
         if check_password_hash(os.environ["APP_PASSWORD_HASH"], password):
             session["logged_in"] = True
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("analytics_page"))
         return render_template("login.html", error="Incorrect password")
     return render_template("login.html")
 
 
-@app.route("/dashboard")
+@app.route("/analytics")
 @login_required
-def dashboard():
-    return render_template("dashboard.html")
+def analytics_page():
+    return render_template("analytics.html")
 
 
-@app.route("/api/dashboard/summary")
-def api_dashboard_summary():
+@app.route("/api/analytics/summary")
+def api_analytics_summary():
     if not session.get("logged_in"):
         return jsonify(error="Unauthorized"), 401
     month = request.args.get("month", type=int)
@@ -59,7 +59,7 @@ def api_dashboard_summary():
         "summary": analytics.get_summary(month, year),
         "monthly_totals": analytics.get_monthly_totals(month, year),
         "category_totals": analytics.get_category_totals(month, year),
-        "top_expenses": analytics.get_top_expenses(month, year),
+        "recent_transactions": analytics.get_recent_expenses(month, year),
     })
 
 
