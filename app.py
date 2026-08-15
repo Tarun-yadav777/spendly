@@ -1,16 +1,21 @@
 import os
+import secrets
+from datetime import date
 from functools import wraps
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from database import analytics
+from database import analytics, expenses
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ["FLASK_SECRET_KEY"]
+# Generated fresh on every process start (not read from .env) so that restarting
+# the server invalidates any session cookie issued before the restart, forcing
+# re-login instead of a stale-but-still-valid cookie staying logged in.
+app.secret_key = secrets.token_hex(32)
 
 
 def login_required(view):
@@ -69,6 +74,51 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/expenses/add", methods=["GET", "POST"])
+@login_required
+def add_expense():
+    if request.method == "POST":
+        expense_name = request.form.get("expense_name", "").strip()
+        amount_raw = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        note = request.form.get("note", "").strip()
+        date_raw = request.form.get("date", "").strip()
+
+        error = None
+        amount = None
+        parsed_date = None
+
+        if not expense_name or not amount_raw or not category or not date_raw:
+            error = "All fields except note are required."
+        elif category not in expenses.CATEGORIES:
+            error = "Please choose a valid category."
+        else:
+            try:
+                amount = float(amount_raw)
+                if amount <= 0:
+                    error = "Amount must be a positive number."
+            except ValueError:
+                error = "Amount must be a valid number."
+
+        if error is None:
+            try:
+                parsed_date = date.fromisoformat(date_raw)
+            except ValueError:
+                error = "Please enter a valid date."
+
+        if error:
+            return render_template("add_expense.html", error=error,
+                                    categories=expenses.CATEGORIES, form=request.form)
+
+        expenses.add_expense(
+            expense_name=expense_name, amount=amount, category=category,
+            note=note, month=parsed_date.month, year=parsed_date.year,
+        )
+        return redirect(url_for("analytics_page"))
+
+    return render_template("add_expense.html", categories=expenses.CATEGORIES)
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
@@ -77,11 +127,6 @@ def logout():
 @app.route("/profile")
 def profile():
     return "Profile page — coming in Step 4"
-
-
-@app.route("/expenses/add")
-def add_expense():
-    return "Add expense — coming in Step 7"
 
 
 @app.route("/expenses/<int:id>/edit")
