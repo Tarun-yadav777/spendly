@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions — Spendly{% endblock %}
+
+{% block head %}
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* Same rationale as analytics.html: static Tailwind utility classes are
+       re-themed under [data-theme="dark"] rather than retrofitting dark: variants. */
+    [data-theme="dark"] #transactions-page { background-color: #0f172a; color: #f1f5f9; }
+    [data-theme="dark"] #transactions-page .bg-white { background-color: #1e293b; }
+    [data-theme="dark"] #transactions-page .bg-slate-50 { background-color: rgba(15, 23, 42, 0.5); }
+    [data-theme="dark"] #transactions-page .text-slate-900 { color: #f1f5f9; }
+    [data-theme="dark"] #transactions-page .text-slate-500 { color: #94a3b8; }
+    [data-theme="dark"] #transactions-page .text-slate-400 { color: #64748b; }
+    [data-theme="dark"] #transactions-page .border,
+    [data-theme="dark"] #transactions-page .border-t,
+    [data-theme="dark"] #transactions-page .border-b { border-color: #334155; }
+    [data-theme="dark"] #transactions-page .hover\:bg-slate-50:hover { background-color: rgba(51, 65, 85, 0.4); }
+    [data-theme="dark"] #transactions-page .hover\:text-slate-900:hover { color: #f1f5f9; }
+    [data-theme="dark"] #transactions-page .text-red-600 { color: #fca5a5; }
+    [data-theme="dark"] #transactions-page .hover\:bg-red-50:hover { background-color: rgba(127, 29, 29, 0.3); }
+    [data-theme="dark"] #transactions-page select { color: #f1f5f9; color-scheme: dark; }
+    [data-theme="dark"] #transactions-page option { background-color: #1e293b; color: #f1f5f9; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div id="transactions-page" class="bg-white text-slate-900 font-sans antialiased">
+<main class="mx-auto max-w-screen-xl px-4 py-6 md:px-6 space-y-5">
+
+    <div>
+        <h1 class="text-2xl text-slate-900">Transactions</h1>
+        <p class="text-sm text-slate-500 mt-1"><span id="transactions-count">—</span> transactions</p>
+    </div>
+
+    <div class="bg-white shadow-sm gap-0 rounded-xl border">
+        <div class="border-b p-6">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-1.5 h-8 rounded-md border px-2 text-xs">
+                    <select id="category-filter" class="outline-none bg-transparent w-40">
+                        <option value="all">All categories</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1.5 h-8 rounded-md border px-2 text-xs">
+                    <select id="month-filter" class="outline-none bg-transparent w-32">
+                        <option value="all">All months</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-1.5 h-8 rounded-md border px-2 text-xs">
+                    <select id="year-filter" class="outline-none bg-transparent w-24">
+                        <option value="all">All years</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="p-0">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b bg-slate-50" id="transactions-table-head"></tr>
+                    </thead>
+                    <tbody id="transactions-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
+{% endblock %}

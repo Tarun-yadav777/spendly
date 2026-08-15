@@ -21,16 +21,29 @@
     {% if request.endpoint != 'login' %}
     <nav class="navbar">
         <div class="nav-inner">
-            <button type="button" id="theme-toggle" class="nav-brand" aria-label="Toggle dark mode">
-                <span class="brand-icon-box">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                        <path d="M8 2C8 2 3 5 3 9C3 11.76 5.24 14 8 14C10.76 14 13 11.76 13 9C13 5 8 2 8 2Z" fill="white" fill-opacity="0.9"/>
-                        <circle cx="8" cy="9" r="2.5" fill="white" fill-opacity="0.3"/>
-                        <circle cx="8" cy="9" r="1.2" fill="white"/>
+            <div class="nav-left">
+                <button type="button" id="theme-toggle" class="nav-brand" aria-label="Toggle dark mode">
+                    <span class="brand-icon-box">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M8 2C8 2 3 5 3 9C3 11.76 5.24 14 8 14C10.76 14 13 11.76 13 9C13 5 8 2 8 2Z" fill="white" fill-opacity="0.9"/>
+                            <circle cx="8" cy="9" r="2.5" fill="white" fill-opacity="0.3"/>
+                            <circle cx="8" cy="9" r="1.2" fill="white"/>
+                        </svg>
+                    </span>
+                    <span class="brand-name">Spendly</span>
+                </button>
+                {% if session.get('logged_in') %}
+                <a href="{{ url_for('transactions_page') }}"
+                   class="nav-link{{ ' nav-link-active' if request.endpoint == 'transactions_page' else '' }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/>
+                        <path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
                     </svg>
-                </span>
-                <span class="brand-name">Spendly</span>
-            </button>
+                    <span>Transactions</span>
+                </a>
+                {% endif %}
+            </div>
             <div class="nav-links">
                 {% if session.get('logged_in') %}
                 {% if request.endpoint == 'add_expense' %}
