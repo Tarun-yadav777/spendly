@@ -32,7 +32,9 @@
                 <span class="brand-name">Spendly</span>
             </button>
             <div class="nav-links">
-                {% if not session.get('logged_in') %}
+                {% if session.get('logged_in') %}
+                <a href="{{ url_for('logout') }}">Sign out</a>
+                {% else %}
                 <a href="{{ url_for('login') }}" class="nav-cta">Sign in</a>
                 {% endif %}
             </div>
